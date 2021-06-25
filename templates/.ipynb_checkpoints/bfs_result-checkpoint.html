@@ -1,0 +1,335 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.18.2/cytoscape.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.3.2/cytoscape-dagre.min.js"></script>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <title>Result</title>
+</head>
+
+<style>
+        #cy {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            background: #4a4a4a;
+            z-index:-1;
+        }
+      .modal {
+          display: none; /* Hidden by default */
+          position: fixed; /* Stay in place */
+          z-index: 1; /* Sit on top */
+          padding-top: 100px; /* Location of the box */
+          left: 0;
+          top: 0;
+          width: 100%; /* Full width */
+          height: 100%; /* Full height */
+          overflow: auto; /* Enable scroll if needed */
+          background-color: rgb(0,0,0); /* Fallback color */
+          background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+
+    /* Modal Content */
+      .modal-content {
+          background-color: #fefefe;
+          margin: auto;
+          padding: 20px;
+          border: 1px solid #888;
+          width: 80%;
+          font-family: Arial, Helvetica, sans-serif;
+    }
+
+      .modal-body {
+          max-height: calc(100vh - 210px);
+          overflow-y: auto;
+    }
+
+    /* The Close Button */
+     .close {
+          color: #aaaaaa;
+          float: right;
+          font-size: 28px;
+          font-weight: bold;
+    }
+
+     .close:hover,
+     .close:focus {
+          color: #000;
+          text-decoration: none;
+          cursor: pointer;
+    }
+
+     #menuDiv {
+          padding:0px 20px 20px 0px
+        }
+
+     #posEv {
+         float:left; 
+         padding-right:20px;
+         width:33%;
+         font-size: large;
+        }
+
+     #negEv {
+        float:left; 
+        width:33%;
+        padding-right:20px;
+        font-size: large;
+        } 
+
+     #incEv {
+        float:right; 
+        width:33%;
+        font-size: large;
+        } 
+
+     #posThickness {
+        float:left; 
+        width:33%;
+        }
+
+     #negThickness {
+        float:left; 
+        width:33%;
+        }
+
+     #incThickness {
+        float:right; 
+        width:33%;
+        }   
+</style>
+    
+
+<body> 
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <h1 id="thickness" style="font-family: Arial, Helvetica, sans-serif"></h1>
+                <h1 style="font-family: Arial, Helvetica, sans-serif">Evidence for this connection:</h1>
+            </div>
+            <div id="modalBody" class="modal-body">
+                <h2 id="posThickness"></h2>
+                <h2 id="negThickness"></h2>
+                <h2 id="incThickness"></h2>
+                <div id="posEv"></div>
+                <div id="negEv"></div>
+                <div id="incEv"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="cy"></div>
+    
+    <script>
+        const data = {{ elements | tojson }};
+        var cy = cytoscape({
+                container: document.getElementById('cy'),
+                elements: data,
+                style: [
+                    {
+                        selector: 'node',
+                        style: {
+                            'label': 'data(label)',
+                           "text-valign" : "center",
+                           "text-halign" : "center",
+                            'width': '2000px',
+                            'height': '2000px',
+                            "font-size": "200px",
+                            "background-color": "#a0fad3",
+                            "text-outline-color": "#555",
+                            "text-outline-width": "2px",
+                            "color": "#080707",
+                            'background-fit': 'contain',
+                            'background-clip': 'none'
+                        }
+                    }, {
+                        selector: 'edge',
+                        style: {
+
+                           'text-background-color': 'yellow',
+                            'text-background-opacity': 0.4,
+                            'width': 'data(weight)',
+                            'target-arrow-shape': 'triangle',
+                            'control-point-step-size': '140px',
+                            'curve-style': 'bezier',
+                            'line-color':"data(color)",
+                            'target-arrow-color': 'data(color)',
+                        }
+                    },
+                    {
+                    selector: 'node.semitransp',
+                    style:{ 'opacity': '.1' }
+                },
+                    {
+                    selector: 'edge.semitransp',
+                    style:{ 'opacity': '.1' }
+                }
+                ],
+                layout: {
+                    name: 'circle'
+
+                }
+            });
+        
+      cy.on('mouseover', 'node', function(evt){
+          var sel = evt.target;
+          cy.nodes().difference(sel.outgoers()).not(sel).addClass('semitransp');
+          cy.edges().difference(sel.edgesTo(sel.outgoers())).addClass("semitransp");
+    });
+        
+      cy.on('mouseout', 'node', function(evt){
+          var sel = evt.target;
+          cy.nodes().difference(sel.outgoers()).not(sel).removeClass('semitransp');
+          cy.edges().difference(sel.edgesTo(sel.outgoers())).removeClass("semitransp");
+    });
+        
+      cy.on('click', 'edge', function(evt){
+          var sel = evt.target;
+          var modal = document.getElementById("myModal");
+          var span = document.getElementsByClassName("close")[0];
+          var thickness=document.getElementById("thickness");
+          var ev=sel.data().ev;
+          var ev_split=ev.split("%%");
+          var ev_length=ev_split.length;
+          thickness.innerHTML="Total mentions: "+ev_length;
+          var ul_pos=document.createElement("ul");
+          var ul_neg=document.createElement("ul");
+          var ul_inc=document.createElement("ul");
+          var negCount=0;
+          var posCount=0;
+          var incCount=0;
+          for (var i = 0; i < ev_split.length; i++) {
+                // Create the list item:
+                var item = document.createElement('li');
+                var cont=document.createElement("div");
+
+                var parts=ev_split[i].split("|");
+                var text=parts[0];
+                var act=parts[1];
+
+
+                // Set its contents:
+                item.appendChild(document.createTextNode(text));
+                cont.appendChild(item)
+                if (act==="Activation (Negative)") {
+                    cont.style.color="red";
+                    negCount=negCount+=1;
+                } else if (act==="Activation (Positive)") {
+                    cont.style.color="blue";
+                    posCount=posCount+=1;
+                }
+                else {
+                    cont.style.color="black";
+                    incCount=incCount+=1;
+                }
+
+                cont.style.padding="0px 0px 20px 0px";
+
+
+                // Add it to the list:
+                if (act==="Activation (Positive)") {
+                    ul_pos.appendChild(cont);
+                } else if (act==="Activation (Negative)") {
+                    ul_neg.appendChild(cont);
+                } else {
+                    ul_inc.appendChild(cont);
+                }
+
+            }
+
+             function createFiller() {
+              var fillerText=document.createElement("li");
+              var fillerCont=document.createElement("div");
+
+              fillerText.appendChild(document.createTextNode("This is filler text"));
+              fillerCont.appendChild(fillerText);
+              fillerCont.style.padding="0px 0px 20px 0px";
+              fillerCont.style.color="blue";
+
+              var fillerText=document.createElement("li");
+              var fillerCont=document.createElement("div");
+
+              fillerText.appendChild(document.createTextNode("This is filler text"));
+              fillerCont.appendChild(fillerText);
+              fillerCont.style.padding="0px 0px 20px 0px";
+              fillerCont.style.color="white";
+              return fillerCont;
+          }
+
+          var fillerPos=createFiller();
+          var fillerNeg=createFiller();
+          var fillerInc=createFiller();
+          ul_pos.appendChild(fillerPos);
+          ul_neg.appendChild(fillerNeg);
+          ul_inc.appendChild(fillerInc);
+
+          document.getElementById("posThickness").innerHTML="Positive: "+posCount;
+          document.getElementById("negThickness").innerHTML="Negative: "+negCount;
+          document.getElementById("incThickness").innerHTML="Inconclusive: "+incCount;  
+          document.getElementById("posEv").innerHTML=ul_pos.innerHTML;
+          document.getElementById("negEv").innerHTML=ul_neg.innerHTML;
+          document.getElementById("incEv").innerHTML=ul_inc.innerHTML;
+          modal.style.display = "block";
+
+          window.onclick = function(event) {
+              if (event.target == modal) {
+                  var modalBody=document.getElementById("modalBody");
+                  modalBody.scrollTop = 0;
+                  modal.style.display="none";
+          }
+        }
+          
+          span.onclick = function() {
+              var modalBody=document.getElementById("modalBody");
+              modalBody.scrollTop = 0;
+              modal.style.display="none";
+        }
+    });
+    </script>
+    
+    <div class="w3-sidebar w3-bar-block w3-border-right" style="display:none;width:25%" id="mySidebar">
+        
+        <button onclick="w3_close()" class="w3-bar-item w3-large">Close &times;</button>
+
+        <form id="queryForm" method="POST" action="{{ url_for('go_home') }}">
+            <p><input class="w3-bar-item w3-button" style="color:#4CAF50" type="submit" value="Return to Homepage" /></p>
+        </form>
+
+        <h2 style="padding-left:10px">Interpreting the Visualization</h2>
+        <ul>
+            <div id="menuDiv">
+                 <li>The thickness of the arrows represent the amount of evidence that supports the connection. The thicker the arrow, the more evidence that supports the connection.</li>
+            </div>
+            <div id="menuDiv">
+                <li>The arrow colors represent the nature of the relationship between two species. If a high percentage of the total evidence for a relationship between node 1 and node 2 indicates that node 1 upregulates node 2, the arrow pointing from node 1 to node 2 is blue. If a low percentage of the total evidence for a relationship between node 1 and node 2 indicates that node 1 upregulates node 2, the arrow pointing from node 1 to node 2 is red. If there is some controversy (i.e. around half of the evidence for the relationship indicates upregulation), the arrow is either light blue (there is controversy, but more evidence supports upregulation), light red (there is controversy, but more evidence supports downregulation), or white (half of the evidence supports upregulation and half supports downregulation).</li>
+            </div>
+             <div id="menuDiv">
+                 <li>Click on connections between nodes to see the evidence for that connection. Blue text for the evidence indicates that the evidence was classified by REACH as supporting upregulation. Red text for the evidence indicates that the evidence was classified by REACH as supporting downregulation. Black text for the evidence indicates that the evidence was classified by REACH as inconclusive. </li>
+             </div>
+             <div id="menuDiv">
+                 <li>Mouseover nodes to see only the nodes that the node directly targets.</li>
+             </div>
+         </ul>
+     </div>
+    
+    <script>
+        function w3_open() {
+          document.getElementById("mySidebar").style.display = "block";
+        }
+
+        function w3_close() {
+          document.getElementById("mySidebar").style.display = "none";
+        }
+    </script>
+    
+    <button class="w3-button w3-teal w3-xlarge" onclick="w3_open()" style="z-index:2">☰</button>
+</body>
+</html>
+
+
