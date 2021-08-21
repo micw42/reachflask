@@ -16,5 +16,5 @@ def name_query(name, nodes, full_df, string_type):
     return in_net
 
 
-def query(name, nodes, full_df):
-    name_query(name, nodes, full_df).to_csv("singleSearchOut.csv", index=False)
+def query(name, nodes, full_df, string_type):
+    name_query(name, nodes, full_df, string_type).to_csv("singleSearchOut.csv", index=False)

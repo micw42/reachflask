@@ -63,7 +63,8 @@ def validate(query_type):
             return redirect(url_for("display_options", not_in=not_in, query_type=query_type, query=query))
         else:
             query=request.form["query"]
-            return redirect(url_for("pick_query", query_type=query_type, query=query))
+            string_type=request.form["queryType"]
+            return redirect(url_for("pick_query", query_type=query_type, query=query, string_type=string_type))
 
     else:
         if query_type=="single":
@@ -71,18 +72,18 @@ def validate(query_type):
         else:
             return render_template("validate_bfs.html")
 
-@app.route('/pick_query/<query_type>/<query>', methods=["POST","GET"])
-def pick_query(query_type, query):
+@app.route('/pick_query/<query_type>/<query>/<string_type>', methods=["POST","GET"])
+def pick_query(query_type, query, string_type):
     global nodes_df
     global full_df
     
     if query_type=="single":
-        singleSearcher.query(query, nodes_df, full_df)
+        singleSearcher.query(query, nodes_df, full_df, string_type)
         result_dict=convertSearch.single_convert()
     else:
         name_query=query
         query=query.split(",")
-        multiSearcher.query(query, nodes_df, full_df)
+        multiSearcher.query(query, nodes_df, full_df, string_type)
         result_dict=convertSearch.multi_convert()
         
     none_found=False

@@ -16,19 +16,19 @@ def name_query(name, nodes, full_df, string_type):
     return in_net
 
 
-def multi_query(query_list, nodes, full_df):
+def multi_query(query_list, nodes, full_df, string_type):
     # initialize empty dataframe
     full_query = pd.DataFrame()
 
     for query in query_list:
-        full_query = full_query.append(name_query(query, nodes, full_df))
+        full_query = full_query.append(name_query(query, nodes, full_df, string_type))
 
     return full_query
 
 
-def query(query_list, nodes, full_df):
+def query(query_list, nodes, full_df, string_type):
     
     # Turns all entries into lower case
     case_proof = [x.lower() for x in query_list]
 
-    multi_query(case_proof, nodes, full_df).to_csv("multiSearchOut.csv", index=False)
+    multi_query(case_proof, nodes, full_df, string_type).to_csv("multiSearchOut.csv", index=False)
