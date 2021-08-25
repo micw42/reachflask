@@ -185,14 +185,17 @@
         <form method="POST" action="#">  
               <h2>These are the IDs in the database that matched with your query. Below each ID, there is a list of names that it corresponds to. For each entity, select the ID that best represents what you want to query for.</h2>
         {% for query, id_dict in result_dict.items() %}  
-               <h1 style="color:#4CAF50">{{ query }}</h1>
+               <h1 style="color:#4CAF50">{{ id_dict.Display }}</h1>
                 <div id="contents">
                         {% for id, name_list in id_dict.items() %}
-                            <input type="radio" name={{ query }} value={{ id }} />{{id}}
-                              {% for n in name_list %}
-                                  <li>{{ n }}</li>
-                              {% endfor %}
-                      <br><br>
+                            {% if id != "Display" %}
+                                <input type="radio" name={{ query }} value={{ id }} />{{id}}
+                                  {% for n in name_list %}
+                                      <li>{{ n }}</li>
+                                  {% endfor %}
+                                <br><br>
+                            {% endif %}
+                      
                       {% endfor %}
                     </div>
         {% endfor %}

@@ -63,6 +63,8 @@ def validate(query_type):
             return redirect(url_for("display_options", not_in=not_in, query_type=query_type, query=query))
         else:
             query=request.form["query"]
+            #Remove spaces from query entries
+            query=query.replace(" ","SPACE")
             string_type=request.form["queryType"]
             return redirect(url_for("pick_query", query_type=query_type, query=query, string_type=string_type))
 
@@ -77,6 +79,8 @@ def pick_query(query_type, query, string_type):
     global nodes_df
     global full_df
     
+    query_with_sep=query.split(",")
+    query=query.replace("SPACE"," ")
     if query_type=="single":
         singleSearcher.query(query, nodes_df, full_df, string_type)
         result_dict=convertSearch.single_convert()
@@ -99,6 +103,7 @@ def pick_query(query_type, query, string_type):
         else:
             if request.form["submit"]=="Try another query":
                 return redirect(url_for("select_query"))
+            print(result_dict)
             query_list=[]
             for query in result_dict:
                 query_list.append(request.form[query])
@@ -109,7 +114,7 @@ def pick_query(query_type, query, string_type):
         if query_type=="single":
             return render_template("pick_results_single.html", result_dict=result_dict, none_found=none_found)
         else:
-            not_in=list(set([q.lower() for q in query])-set(result_dict.keys()))
+            not_in=list(set([q.lower() for q in query_with_sep])-set([k.lower() for k in result_dict.keys()]))
             return render_template("pick_results_multi.html", query=query, result_dict=result_dict, not_in=not_in, none_found=none_found)
         
     

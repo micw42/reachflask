@@ -18,11 +18,13 @@ def multi_convert():
     ids=results["id"].tolist()
     names=results["name"].tolist()
     queries=results["user_query"].tolist()
+    query_display=results["user_query"].tolist()  #The name to display, but not use as a key, b/c flask doesn't like spaces in request.form[]
     
     result_dict={}
     for i in range(len(ids)):
+        queries[i]=queries[i].replace(" ", "SPACE")
         if queries[i] not in result_dict:
-            result_dict[queries[i]]={}
+            result_dict[queries[i]]={"Display":query_display[i]}
         if ids[i] not in result_dict[queries[i]]:
             result_dict[queries[i]][ids[i]]=[]
         result_dict[queries[i]][ids[i]].append(names[i])
